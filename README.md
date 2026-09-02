@@ -9,7 +9,7 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-터미널에 표시되는 주소로 접속하면 됩니다. 기본 주소는 `http://localhost:5173`입니다.
+터미널에 표시되는 주소로 접속하면 됩니다. 기본 주소는 `http://localhost:3100`입니다.
 
 ## 자주 쓰는 명령어
 
