@@ -23,17 +23,6 @@ npm.cmd run dev
 
 터미널에 표시되는 주소로 접속하면 됩니다. 기본 주소는 `http://localhost:3100`입니다.
 
-## GitHub Actions 배포
-
-`.github/workflows/deploy.yml`은 `main` 브랜치에 푸시하거나 Actions에서 수동 실행하면 정적 사이트 Docker 이미지를 빌드해 SSH로 Linux Docker 서버에 배포합니다.
-
-GitHub 저장소의 **Settings → Secrets and variables → Actions**에서 설정합니다.
-
-- Secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_PRIVATE_KEY`
-- Variables: `DEPLOY_PATH` (서버의 절대 경로, 백엔드 저장소와 같은 값 권장), `DEPLOY_PLATFORM` (`linux/amd64` 또는 `linux/arm64`), `VITE_API_BASE_URL` (브라우저에서 접근할 백엔드의 전체 origin, 예: `https://api.example.com`)
-
-배포 서버에는 Docker가 설치되어 있어야 하며 SSH 사용자가 Docker 실행 권한과 `DEPLOY_PATH` 쓰기 권한을 가져야 합니다. 프론트엔드는 호스트 포트 `8080`으로 열립니다. 두 컨테이너를 같은 서버에서 실행하면 보안그룹/방화벽과 리버스 프록시에서 프론트엔드와 API 경로를 외부에 연결하세요.
-
 ## 자주 쓰는 명령어
 
 ```powershell

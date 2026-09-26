@@ -85,10 +85,25 @@ jobs:
             set -eu
             cd "${{ vars.DEPLOY_PATH }}/web-template-front"
             docker load -i web-template-front.tar.gz
+            case "$(uname -m)" in
+              x86_64) HOST_ARCH=amd64 ;;
+              aarch64|arm64) HOST_ARCH=arm64 ;;
+              *) echo "Unsupported server architecture: $(uname -m)" >&2; exit 1 ;;
+            esac
+            IMAGE_ARCH=$(docker image inspect --format '{{.Architecture}}' "web-template-front:$IMAGE_TAG")
+            if [ "$IMAGE_ARCH" != "$HOST_ARCH" ]; then
+              echo "Image architecture linux/$IMAGE_ARCH does not match server linux/$HOST_ARCH. Set DEPLOY_PLATFORM correctly." >&2
+              exit 1
+            fi
             docker stop web-template-front 2>/dev/null || true
             docker rm web-template-front 2>/dev/null || true
             docker run -d --name web-template-front \
               --restart unless-stopped \
               -p 8080:80 \
               "web-template-front:$IMAGE_TAG"
+            sleep 3
+            if [ "$(docker inspect --format '{{.State.Status}}' web-template-front)" != "running" ]; then
+              docker logs web-template-front
+              exit 1
+            fi
             rm -f web-template-front.tar.gz
