@@ -2,6 +2,8 @@
 
 Vue 3와 Vite로 만든 프런트엔드 프로젝트입니다.
 
+배포에 필요한 GitHub Secrets와 Variables는 [DEPLOYMENT.md](DEPLOYMENT.md)를 참고하세요.
+
 ## 로그인
 
 - 로그인 화면: `http://localhost:3100/#/login`
