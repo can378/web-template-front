@@ -1,0 +1,97 @@
+name: Deploy web frontend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+      DEPLOY_PLATFORM: ${{ vars.DEPLOY_PLATFORM || 'linux/amd64' }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate deployment settings
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_PRIVATE_KEY DEPLOY_PATH; do
+            if [ -z "${!name}" ]; then
+              echo "Missing required GitHub secret/variable: $name" >&2
+              exit 1
+            fi
+          done
+          case "$DEPLOY_PATH" in
+            /*) ;;
+            *) echo "DEPLOY_PATH must be an absolute server path." >&2; exit 1 ;;
+          esac
+
+      - name: Validate frontend API URL
+        run: |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "Set the GitHub repository variable VITE_API_BASE_URL to the public backend URL." >&2
+            exit 1
+          fi
+
+      - name: Build and save Docker image
+        run: |
+          docker buildx build \
+            --platform "$DEPLOY_PLATFORM" \
+            --build-arg "VITE_API_BASE_URL=$VITE_API_BASE_URL" \
+            --tag "web-template-front:$IMAGE_TAG" \
+            --load .
+          docker save "web-template-front:$IMAGE_TAG" | gzip > web-template-front.tar.gz
+
+      - name: Prepare deployment files
+        run: |
+          mkdir upload
+          cp web-template-front.tar.gz upload/
+
+      - name: Copy image to deployment server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          source: upload/*
+          target: ${{ vars.DEPLOY_PATH }}/web-template-front
+          strip_components: 1
+
+      - name: Deploy container on server
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          envs: IMAGE_TAG
+          script: |
+            set -eu
+            cd "${{ vars.DEPLOY_PATH }}/web-template-front"
+            docker load -i web-template-front.tar.gz
+            docker stop web-template-front 2>/dev/null || true
+            docker rm web-template-front 2>/dev/null || true
+            docker run -d --name web-template-front \
+              --restart unless-stopped \
+              -p 8080:80 \
+              "web-template-front:$IMAGE_TAG"
+            rm -f web-template-front.tar.gz
