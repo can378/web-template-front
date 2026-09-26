@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 defineProps({ pending: Boolean, error: String })
 const emit = defineEmits(['login'])
@@ -31,7 +32,7 @@ function submit() {
         <p v-if="error" class="form-error" role="alert">{{ error }}</p>
         <button class="login-submit" type="submit" :disabled="pending || !loginId.trim() || !password">{{ pending ? '로그인 중…' : '로그인' }}</button>
       </form>
-      <a class="back-link" href="#">홈으로</a>
+      <RouterLink class="back-link" to="/">홈으로</RouterLink>
     </section>
   </main>
 </template>

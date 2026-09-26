@@ -1,9 +1,5 @@
-<script setup>
-defineProps({ user: Object })
-</script>
-
 <template>
   <main id="main" tabindex="-1" class="home-page container">
-    <h1>{{ '메인' }}</h1>
+    <p>내용4</p>
   </main>
 </template>
