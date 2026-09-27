@@ -41,7 +41,6 @@ PowerShell 실행 정책으로 `npm` 실행이 막히면 `npm.cmd`를 사용하�
 ## 프런트엔드 구조와 확장
 
 - `src/router/index.js`: 주소, 페이지 컴포넌트, 브라우저 탭 제목을 등록합니다. 기존 링크와 정적 호스팅을 위해 해시 라우팅을 사용합니다.
-- `src/config/menus.js`: 메뉴 형식 참고용 예시입니다. 실행 중에는 사용하지 않으며 실제 메뉴는 DB에서 관리합니다.
 - `src/services/menu.js`: 세션 쿠키와 함께 `GET /api/menus`를 호출합니다. 인증 API와 같은 `VITE_API_BASE_URL`을 사용합니다.
 - `src/services/menu-state.js`: 메뉴 로딩·오류 상태 및 재조회 관리. 이전 세션의 늦은 응답은 무시합니다.
 - `src/router/menu-guard.js`: `meta.menuRequired: true`인 페이지 진입 시 이미 불러온 메뉴로 경로 접근을 검사합니다. 최초 조회는 진행 중인 요청을 공유합니다.
